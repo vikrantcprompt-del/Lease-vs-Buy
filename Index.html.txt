@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laptop Lease vs. Buy Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .input-group label {
+            font-weight: 500;
+        }
+        .input-group select, .input-group input {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background-color: #fff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            width: 100%; /* Ensure inputs take full width */
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+        }
+        .result-box {
+            background-color: #eff6ff; /* Light blue */
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #bfdbfe;
+        }
+        .info-icon {
+            cursor: pointer;
+            color: #6b7280;
+            font-size: 0.9em; /* Slightly smaller for inline */
+            margin-left: 6px;
+            vertical-align: middle;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            font-weight: bold;
+            line-height: 1; /* Center the 'i' vertically */
+        }
+        .info-icon:hover {
+            background-color: #d1d5db;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto; /* Adjusted margin for better mobile view */
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            max-width: 90%; /* Responsive width */
+            width: 500px; /* Max width for desktop */
+            position: relative;
+        }
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+        .close-button:hover {
+            color: #6b7280;
+        }
+        .modal-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+            white-space: nowrap; /* Prevent text wrapping in table cells */
+        }
+        .comparison-table th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .comparison-table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .comparison-table td:not(:first-child) {
+            text-align: right;
+            font-weight: 500;
+        }
+        .subtotal-row {
+            font-weight: bold;
+            background-color: #e0f2fe !important; /* Light blue for subtotal */
+            color: #3b82f6;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #bfdbfe !important; /* Deeper blue for overall total */
+            color: #1f2937;
+        }
+        .summary-section {
+            background-color: #f0f9ff; /* Light blue background */
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            margin-top: 2rem;
+            text-align: left;
+            border: 1px solid #bfdbfe; /* Light blue border */
+        }
+        .summary-section h3 {
+            color: #1d4ed8; /* Darker blue heading */
+            margin-bottom: 1rem;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #ffffff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .overflow-x-auto {
+            overflow-x: auto; /* Enable horizontal scrolling for tables */
+        }
+        /* Responsive adjustments for input groups */
+        .input-group {
+            min-width: 180px; /* Ensure inputs don't become too narrow on small screens */
+        }
+        @media (max-width: 768px) {
+            .input-group {
+                min-width: unset;
+            }
+            .grid-cols-1.md:grid-cols-2.lg:grid-cols-3 > div {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center py-12 px-4 min-h-screen">
+    <div class="container mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-800 mb-2">Laptop Lease vs. Buy Calculator</h1>
+            <p class="text-gray-600 text-lg sm:text-xl">See how much your company can save by renting your laptops.</p>
+        </div>
+
+        <!-- Inputs Section -->
+        <div class="card mb-8">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-700">1. Your Company Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Cost of Buying Section -->
+                <div class="col-span-full">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Cost of Buying</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Mode of Finance -->
+                        <div class="input-group flex flex-col">
+                            <label for="modeOfFinance" class="text-gray-600 mb-1">Mode of Finance</label>
+                            <select id="modeOfFinance" class="rounded-lg">
+                                <option value="equity" selected>Fund by Equity</option>
+                                <option value="loan">Fund by Loan</option>
+                            </select>
+                        </div>
+                        <!-- Interest Rate / Equity Cost -->
+                        <div class="input-group flex flex-col">
+                            <label for="interestRate" class="text-gray-600 mb-1">Interest Rate / Equity Cost (%)</label>
+                            <select id="interestRate" class="rounded-lg">
+                                <option value="9">9%</option>
+                                <option value="10">10%</option>
+                                <option value="11">11%</option>
+                                <option value="12" selected>12%</option>
+                                <option value="13">13%</option>
+                                <option value="14">14%</option>
+                                <option value="15">15%</option>
+                            </select>
+                        </div>
+                        <!-- Number of Laptops -->
+                        <div class="input-group flex flex-col">
+                            <label for="numLaptops" class="text-gray-600 mb-1">Number of Laptops</label>
+                            <select id="numLaptops" class="rounded-lg">
+                                <option value="1">1</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="40">40</option>
+                                <option value="50" selected>50</option>
+                                <option value="80">80</option>
+                                <option value="100">100</option>
+                                <option value="150">150</option>
+                                <option value="200">200</option>
+                                <option value="250">250</option>
+                                <option value="300">300</option>
+                                <option value="400">400</option>
+                                <option value="500">500</option>
+                                <option value="1000">1,000</option>
+                                <option value="2000">2,000</option>
+                                <option value="3000">3,000</option>
+                                <option value="4000">4,000</option>
+                                <option value="5000">5,000</option>
+                            </select>
+                        </div>
+                        <!-- Average Price per Laptop -->
+                        <div class="input-group flex flex-col">
+                            <label for="avgPrice" class="text-gray-600 mb-1">Avg. Price per Laptop (₹)</label>
+                            <select id="avgPrice" class="rounded-lg">
+                                <option value="50000">50,000</option>
+                                <option value="60000" selected>60,000</option>
+                                <option value="75000">75,000</option>
+                                <option value="80000">80,000</option>
+                                <option value="90000">90,000</option>
+                                <option value="100000">100,000</option>
+                                <option value="150000">150,000</option>
+                                <option value="200000">200,000</option>
+                                <option value="250000">250,000</option>
+                            </select>
+                        </div>
+                        <!-- Duration -->
+                        <div class="input-group flex flex-col">
+                            <label for="duration" class="text-gray-600 mb-1">Duration (Years)</label>
+                            <select id="duration" class="rounded-lg">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3" selected>3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tax Implications Section (Moved Up) -->
+                <div class="col-span-full mt-6">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Tax Implications</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Residual Value Option -->
+                        <div class="input-group flex flex-col">
+                            <label for="residualValueOption" class="text-gray-600 mb-1">Residual Value Option</label>
+                            <select id="residualValueOption" class="rounded-lg">
+                                <option value="sell" selected>Sell</option>
+                                <option value="donate">Donate</option>
+                            </select>
+                        </div>
+                        <!-- Residual Value Rate -->
+                        <div class="input-group flex flex-col">
+                            <label for="residualValueRateInput" class="text-gray-600 mb-1 flex items-center">Residual Value Rate (%)
+                                <span class="info-icon" data-info="buy-residual-rate">ⓘ</span>
+                            </label>
+                            <input type="number" id="residualValueRateInput" value="10" min="0" max="100" class="rounded-lg">
+                        </div>
+                        <!-- Corporate Tax Rate -->
+                        <div class="input-group flex flex-col">
+                            <label for="corporateTaxRate" class="text-gray-600 mb-1 flex items-center">Corporate Tax Rate (%)
+                                <span class="info-icon" data-info="corporate-tax-rate">ⓘ</span>
+                            </label>
+                            <input type="number" id="corporateTaxRate" value="25.7" min="0" max="100" step="0.1" class="rounded-lg">
+                        </div>
+                        <!-- Depreciation Years -->
+                        <div class="input-group flex flex-col">
+                            <label for="depreciationYearsInput" class="text-gray-600 mb-1">Depreciation Period (Years)</label>
+                            <input type="number" id="depreciationYearsInput" value="3" min="1" class="rounded-lg">
+                        </div>
+                        <!-- Company Discount Rate -->
+                        <div class="input-group flex flex-col">
+                            <label for="discountRate" class="text-gray-600 mb-1 flex items-center">Company Discount Rate (%)
+                                <span class="info-icon" data-info="company-discount-rate">ⓘ</span>
+                            </label>
+                            <input type="number" id="discountRate" value="10" min="0" class="rounded-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Impact on Productivity Section (Moved Down) -->
+                <div class="col-span-full mt-6">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Impact on Productivity</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Avg. Employee Salary -->
+                        <div class="input-group flex flex-col">
+                            <label for="avgSalary" class="text-gray-600 mb-1">Avg. Employee Salary/Month (₹)</label>
+                            <select id="avgSalary" class="rounded-lg">
+                                <option value="0">0</option> <!-- Added 0 option here -->
+                                <option value="25000">25,000</option>
+                                <option value="30000">30,000</option>
+                                <option value="35000">35,000</option>
+                                <option value="40000" selected>40,000</option>
+                                <option value="50000">50,000</option>
+                                <option value="75000">75,000</option>
+                                <option value="100000">1,00,000</option>
+                                <option value="150000">1,50,000</option>
+                                <option value="250000">2,50,000</option>
+                            </select>
+                        </div>
+                        <!-- Loss of Productivity -->
+                        <div class="input-group flex flex-col">
+                            <label for="productivityLoss" class="text-gray-600 mb-1">Loss of Productivity of Employees (%)</label>
+                            <select id="productivityLoss" class="rounded-lg">
+                                <option value="0">0%</option>
+                                <option value="5">5%</option>
+                                <option value="10">10%</option>
+                                <option value="15">15%</option>
+                                <option value="20" selected>20%</option>
+                                <option value="25">25%</option>
+                                <option value="30">30%</option>
+                                <option value="35">35%</option>
+                                <option value="40">40%</option>
+                                <option value="45">45%</option>
+                                <option value="50">50%</option>
+                                <option value="60">60%</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Management/Maintenance Cost Section -->
+                <div class="col-span-full mt-6">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-700">Management/Maintenance Cost</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Laptops per IT Person -->
+                        <div class="input-group flex flex-col">
+                            <label for="laptopsPerIT" class="text-gray-600 mb-1"># of Laptops managed per IT person</label>
+                            <select id="laptopsPerIT" class="rounded-lg">
+                                <option value="0">0</option> <!-- Added 0 option here -->
+                                <option value="50" selected>50</option>
+                                <option value="100">100</option>
+                                <option value="150">150</option>
+                                <option value="200">200</option>
+                                <option value="250">250</option>
+                                <option value="300">300</option>
+                                <option value="350">350</option>
+                                <option value="400">400</option>
+                                <option value="450">450</option>
+                                <option value="500">500</option>
+                                <option value="550">550</option>
+                                <option value="600">600</option>
+                                <option value="650">650</option>
+                                <option value="700">700</option>
+                                <option value="750">750</option>
+                                <option value="800">800</option>
+                                <option value="850">850</option>
+                                <option value="900">900</option>
+                                <option value="950">950</option>
+                                <option value="1000">1,000</option>
+                            </select>
+                        </div>
+                        <!-- Cost per IT Person -->
+                        <div class="input-group flex flex-col">
+                            <label for="itCost" class="text-gray-600 mb-1">Avg. Monthly Salary per IT Person (₹)</label>
+                            <select id="itCost" class="rounded-lg">
+                                <option value="0">0</option>
+                                <option value="25000">25,000</option>
+                                <option value="30000">30,000</option>
+                                <option value="35000">35,000</option>
+                                <option value="40000" selected>40,000</option>
+                                <option value="50000">50,000</option>
+                                <option value="60000">60,000</option>
+                                <option value="70000">70,000</option>
+                                <option value="80000">80,000</option>
+                                <option value="90000">90,000</option>
+                                <option value="100000">1,00,000</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="flex flex-wrap justify-center mt-8 space-x-4">
+                <button id="calculateButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out flex items-center justify-center min-w-[120px] mb-2 sm:mb-0">
+                    Calculate
+                </button>
+                <button id="resetButton" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg shadow-lg transition duration-300 ease-in-out flex items-center justify-center min-w-[120px]">
+                    Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Final Comparison Section -->
+        <div class="mt-8 text-center">
+            <div class="result-box bg-blue-50">
+                <h3 class="text-2xl font-bold text-gray-700 mb-4">Final Comparison</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <p class="text-lg font-semibold text-gray-600">Nominal Cash Outflows (Buy):</p>
+                        <p id="nominal-buy-total" class="text-2xl font-extrabold text-blue-700"></p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-semibold text-gray-600">Nominal Cash Outflows (Lease):</p>
+                        <p id="nominal-lease-total" class="text-2xl font-extrabold text-blue-700"></p>
+                    </div>
+                    <div class="col-span-full">
+                        <p class="text-lg font-semibold text-gray-600">Nominal Savings When Renting:</p>
+                        <p id="nominal-total-savings" class="text-3xl font-extrabold text-green-600"></p>
+                    </div>
+                </div>
+                <hr class="my-6 border-gray-300">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-lg font-semibold text-gray-600">Net Cost to Buy (PV):</p>
+                        <p id="final-buy-net-cost" class="text-3xl font-extrabold text-blue-700"></p>
+                    </div>
+                    <div>
+                        <p class="text-lg font-semibold text-gray-600">Net Cost to Lease (PV):</p>
+                        <p id="final-lease-net-cost" class="text-3xl font-extrabold text-blue-700"></p>
+                    </div>
+                    <div class="col-span-full">
+                        <p class="text-lg font-semibold text-gray-600">Total Savings When Renting (PV):
+                             <span class="info-icon" data-info="total-savings">ⓘ</span>
+                        </p>
+                        <p id="total-savings" class="text-4xl font-extrabold text-green-600"></p>
+                    </div>
+                </div>
+                <p id="total-savings-percentage" class="text-xl font-semibold text-gray-700 mb-2"></p>
+                <p class="text-gray-500 text-sm mt-2">A negative number indicates a loss by renting compared to buying.</p>
+            </div>
+        </div>
+
+        <!-- New Annual Cash Flow Summary Section -->
+        <div class="mt-8">
+            <h3 class="text-2xl font-bold text-gray-700 mb-4 text-center">Annual Cash Flow Summary</h3>
+
+            <!-- Buy Option Annual Cash Flow Table -->
+            <div class="card bg-gray-50 mb-8">
+                <h4 class="text-xl font-semibold mb-4 text-gray-700">Buy Option: Annual Cash Flow</h4>
+                <div class="overflow-x-auto">
+                    <table class="comparison-table w-full">
+                        <thead id="buy-cashflow-thead"></thead>
+                        <tbody id="buy-cashflow-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lease Option Annual Cash Flow Table -->
+            <div class="card bg-gray-50">
+                <h4 class="text-xl font-semibold mb-4 text-gray-700">Lease Option: Annual Cash Flow</h4>
+                <div class="overflow-x-auto">
+                    <table class="comparison-table w-full">
+                        <thead id="lease-cashflow-thead"></thead>
+                        <tbody id="lease-cashflow-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lease vs. Buy Side-by-Side Comparison Table (Moved to the end) -->
+        <div class="mt-8">
+            <h3 class="text-2xl font-bold text-gray-700 mb-4 text-center">Lease vs. Buy Financial Comparison</h3>
+            <div class="card bg-gray-50 mb-8">
+                <div class="overflow-x-auto">
+                    <table class="comparison-table w-full">
+                        <thead id="side-by-side-thead"></thead>
+                        <tbody id="side-by-side-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- The Modal -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h4 id="modal-title" class="modal-title"></h4>
+            <div id="modal-body" class="text-gray-700 text-sm"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mapping of data-info attributes to human-readable titles and detailed content
+            const infoContent = {
+                'buy-initial-outlay': {
+                    title: 'Initial Outlay (Year 0)',
+                    body: `This is the total cost to buy all your laptops right away, representing a one-time cash outflow at the beginning of the period.
+                            <br/><br/>
+                            Formula:
+                            Initial Outlay = Number of Laptops x Avg. Price per Laptop`
+                },
+                'buy-cost-of-equity': {
+                    title: 'Cost of Equity (Opportunity Cost)',
+                    body: `When funding with equity, this represents the potential return your company misses out on by using its cash to buy laptops instead of investing it elsewhere. It's a crucial economic (but non-cash) cost.
+                           <br/><br/>
+                           This cost is only applicable when 'Fund by Equity' is selected. It is <strong>not</strong> tax-deductible.
+                           <br/><br/>
+                           Formula:
+                           Annual Cost of Equity = Initial Purchase Price x Equity Cost Rate`
+                },
+                'buy-annual-principal': {
+                    title: 'Principal Payments (Buy)',
+                    body: `This represents the annual principal portion of your loan payments for purchasing the laptops. It reduces the outstanding loan balance.`
+                },
+                'buy-annual-interest': {
+                    title: 'Interest Payments (Buy)',
+                    body: `This represents the average annual interest component of your loan payments over the duration. This is only applicable when funding by loan.
+                            <br/><br/>
+                            Loan Monthly Payment (PMT) Formula:
+                            PMT = [P x R x (1+R)^N] / [(1+R)^N - 1]<br/>
+                            Where P = Original Loan Amount, R = loan's monthly interest rate, and N = total number of months.`
+                },
+                'buy-tax-interest': {
+                    title: 'Tax Benefit on Interest (Buy)',
+                    body: `This is the annual tax saving your company receives because the interest paid on the laptop loan is a tax-deductible expense. Calculated as: Annual Interest Paid x Corporate Tax Rate.`
+                },
+                'buy-management': {
+                    title: 'Annual Management & Maintenance Cost',
+                    body: `This is the average annual nominal cost to manage, maintain, and support the laptops with your own IT staff over the entire duration. We estimate the number of IT people needed and multiply by their annual cost.
+                            <br/><br/>
+                            Formula:
+                            Annual Management Cost = round up (Number of Laptops / Laptops per IT Person) x Cost per IT Person x 12`
+                },
+                'productivity-loss-comparison': { // Generic productivity loss for side-by-side
+                    title: 'Annual Productivity Loss',
+                    body: `This is the estimated annual money your company loses due to employee downtime caused by laptop issues (performance, breakdowns, setup time). For the Buy option, this is generally higher due to internal management. For the Lease option, it's typically lower due to external support and quicker replacements.
+                            <br/><br/>
+                            Formula:
+                            Annual Productivity Loss = Number of Laptops x Avg. Employee Salary x 12 x Loss of Productivity Rate`
+                },
+                'buy-depreciation-amount': {
+                    title: 'Depreciation as per IT Act (Buy)',
+                    body: `This is the annual non-cash expense that reduces the value of the owned laptops over their useful life, as allowed by tax regulations (IT Act). This amount is used to calculate tax benefits.`
+                },
+                'buy-depreciation': {
+                    title: 'Tax Benefit on Depreciation (Buy)',
+                    body: `This is the average annual nominal tax benefit you receive because the value of your purchased laptops decreases over time (depreciation). This annual depreciation amount is tax-deductible.
+                            <br/><br/>
+                            Formula:
+                            Annual Tax Savings = (Annual Depreciation Amount) x Corporate Tax Rate`
+                },
+                'buy-residual': {
+                    title: 'Residual Value (Year End)',
+                    body: `This is the estimated amount of money you could get back by selling the laptops at the end of the chosen period. If you choose to **donate** the laptops, this value will be zero.
+                            <br/><br/>
+                            Formula (if selling):
+                            Residual Value = Initial Purchase Price x Residual Value Rate`
+                },
+                'buy-residual-rate': {
+                    title: 'Residual Value Rate',
+                    body: `This is the estimated percentage of the initial purchase price that you expect to recover by selling the laptops at the end of their useful life or the chosen duration. A higher rate means you expect to sell them for more. This is only applicable if you select the "Sell" option for residual value.`
+                },
+                'lease-cost': {
+                    title: 'Annual Lease Rent',
+                    body: `This is the average annual nominal cost you pay to rent the laptops for the entire duration. This single cost often covers the management and maintenance.
+                            <br/><br/>
+                            Formula:
+                            Annual Renting Cost = Initial Purchase Price x Lease Rate`
+                },
+                'lease-tax-benefit': {
+                    title: 'Tax Benefit on Lease Rent',
+                    body: `This is the annual tax saving your company receives because lease payments are typically 100% tax-deductible business expenses. Calculated as: Annual Lease Rent x Corporate Tax Rate.`
+                },
+                'total-savings': {
+                    title: 'Total Savings When Renting (PV)',
+                    body: `This is the final comparison, representing the difference between the Net Present Cost (PV) of buying and the Net Present Cost (PV) of renting. If this number is positive, you save money by renting. If it's negative, it means renting would actually cost you more. All values are in today's money.`
+                },
+                'corporate-tax-rate': {
+                    title: 'Corporate Tax Rate',
+                    body: `This is the percentage of your company's profits that must be paid as tax to the government. This rate affects how much your tax savings from expenses like depreciation or lease payments are worth.
+                            <br/><br/>
+                            *Standard Rates in India:*
+                            For domestic companies, a common base rate is 22% (if not opting for certain deductions). It can vary, with some companies potentially paying 25% or 30% depending on turnover and other factors. The default of 25.7% is a common effective rate.`
+                },
+                'company-discount-rate': {
+                    title: 'Company Discount Rate',
+                    body: `This rate helps you understand the "time value of money" – meaning a rupee today is generally worth more than a rupee in the future. It reflects what your company could earn by investing money elsewhere, or the cost of borrowing capital. A higher discount rate means future money is worth less to you today.
+                            <br/><br/>
+                            *Typical Range in India:*
+                            While there's no single "standard" rate as it's company-specific, for many businesses, this rate often falls in the range of 10% to 15%, depending on their cost of capital and risk profile.`
+                },
+                // New entries for the side-by-side comparison table totals
+                'total-outflows-nominal': {
+                    title: 'Total Outflows (Nominal)',
+                    body: `This is the sum of all money leaving your company for this option over the entire duration, without accounting for the time value of money.`
+                },
+                'total-outflows-pv': {
+                    title: 'Total Outflows (PV)',
+                    body: `This is the sum of the Present Values of all money leaving your company for this option over the entire duration. It's the total cost in today's money.`
+                },
+                'total-inflows-nominal': {
+                    title: 'Total Inflows / Tax Benefits (Nominal)',
+                    body: `This is the sum of all money coming into your company or tax savings received for this option over the entire duration, without accounting for the time value of money.`
+                },
+                'total-inflows-pv': {
+                    title: 'Total Inflows / Tax Benefits (PV)',
+                    body: `This is the sum of the Present Values of all money coming into your company or tax savings received for this option over the entire duration. It's the total benefit in today's money.`
+                },
+                'net-cost-nominal': {
+                    title: 'Net Cost (Nominal)',
+                    body: `This is the total nominal outflows minus total nominal inflows/tax benefits for this option.`
+                },
+                'net-cost-pv': {
+                    title: 'Net Cost (PV)',
+                    body: `This is the total Present Value outflows minus total Present Value inflows/tax benefits for this option. This is the most accurate measure of the true cost.`
+                }
+            };
+            
+            const inputs = {
+                modeOfFinance: document.getElementById('modeOfFinance'),
+                numLaptops: document.getElementById('numLaptops'),
+                avgPrice: document.getElementById('avgPrice'),
+                duration: document.getElementById('duration'),
+                interestRate: document.getElementById('interestRate'), // Loan interest rate / Equity cost
+                residualValueOption: document.getElementById('residualValueOption'), // New input for donate/sell
+                residualValueRateInput: document.getElementById('residualValueRateInput'),
+                corporateTaxRate: document.getElementById('corporateTaxRate'),
+                depreciationYearsInput: document.getElementById('depreciationYearsInput'),
+                discountRate: document.getElementById('discountRate'),
+                avgSalary: document.getElementById('avgSalary'),
+                productivityLoss: document.getElementById('productivityLoss'),
+                laptopsPerIT: document.getElementById('laptopsPerIT'),
+                itCost: document.getElementById('itCost')
+            };
+
+            const outputs = {
+                nominalBuyTotal: document.getElementById('nominal-buy-total'),
+                nominalLeaseTotal: document.getElementById('nominal-lease-total'),
+                nominalTotalSavings: document.getElementById('nominal-total-savings'),
+                
+                totalSavings: document.getElementById('total-savings'), // Still PV
+                totalSavingsPercentage: document.getElementById('total-savings-percentage'),
+                finalBuyNetCost: document.getElementById('final-buy-net-cost'), // For comparison display
+                finalLeaseNetCost: document.getElementById('final-lease-net-cost'), // For comparison display
+                
+                buyCashflowThead: document.getElementById('buy-cashflow-thead'),
+                buyCashflowTbody: document.getElementById('buy-cashflow-tbody'),
+                leaseCashflowThead: document.getElementById('lease-cashflow-thead'),
+                leaseCashflowTbody: document.getElementById('lease-cashflow-tbody'),
+
+                sideBySideThead: document.getElementById('side-by-side-thead'),
+                sideBySideTbody: document.getElementById('side-by-side-tbody')
+            };
+
+            // Constants
+            const leaseRate = 0.04 * 12;      // 48% (based on 4% monthly)
+            const depreciationRate = 0.33;    // 33% per year for 3 years, assuming straight-line
+            const leaseProductivityLossRate = 0.05; // 5% max as requested
+
+            // Store initial values for reset
+            const initialInputValues = {};
+            for (const key in inputs) {
+                const element = inputs[key];
+                if (element) {
+                    initialInputValues[key] = element.value !== undefined ? element.value : element.getAttribute('value') || '';
+                } else {
+                    initialInputValues[key] = ''; // Handle cases where element might be null
+                }
+            }
+
+            function formatCurrency(amount) {
+                if (amount === null || isNaN(amount)) {
+                    return '₹0';
+                }
+                // Handle negative values by putting the minus sign outside the rupee symbol
+                const isNegative = amount < 0;
+                const absoluteAmount = Math.abs(amount);
+                const formatted = `₹${absoluteAmount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+                return isNegative ? `- ${formatted}` : formatted;
+            }
+
+            // Function to calculate Present Value of a single future amount
+            function calculatePVSingleAmount(rate, numPeriods, futureValue) {
+                if (futureValue === 0) return 0;
+                if (numPeriods === 0) return futureValue;
+                if (rate === 0) return futureValue; // If rate is 0, PV is FV
+                return futureValue / Math.pow(1 + rate, numPeriods);
+            }
+
+            // --- Core Calculation Logic ---
+            let globalCalculatedValues = {}; // Store results for summary generation
+
+            function calculate() {
+                // Get values from inputs robustly
+                const modeOfFinance = inputs.modeOfFinance?.value || 'equity';
+                const numLaptops = parseFloat(inputs.numLaptops?.value || '0');
+                const avgPrice = parseFloat(inputs.avgPrice?.value || '0');
+                const durationYears = parseFloat(inputs.duration?.value || '0');
+                const interestRateInput = parseFloat(inputs.interestRate?.value || '0') / 100; // This is now Loan Interest OR Equity Cost
+                const residualValueOption = inputs.residualValueOption?.value || 'sell'; // Get residual value option
+                const avgSalary = parseFloat(inputs.avgSalary?.value || '0'); // Monthly salary
+                const buyProductivityLossRate = parseFloat(inputs.productivityLoss?.value || '0') / 100;
+                const laptopsPerIT = parseFloat(inputs.laptopsPerIT?.value || '0');
+                const itCost = parseFloat(inputs.itCost?.value || '0'); // Monthly IT cost per person
+                const residualValueRate = parseFloat(inputs.residualValueRateInput?.value || inputs.residualValueRateInput?.getAttribute('value') || '0') / 100;
+                const corporateTaxRate = parseFloat(inputs.corporateTaxRate?.value || '0') / 100;
+                const depreciationYearsInput = parseFloat(inputs.depreciationYearsInput?.value || '0');
+                const annualDiscountRate = parseFloat(inputs.discountRate?.value || '0') / 100; // Company discount rate (annual)
+
+                // Ensure duration is at least 1 for array indexing, as select options start from 1
+                const actualDurationYears = Math.max(1, durationYears);
+
+                // --- BUY OPTION CALCULATIONS (NOMINAL ANNUAL CASH FLOWS) ---
+
+                const initialPurchasePrice = numLaptops * avgPrice;
+
+                // Initial Outlay (Year 0)
+                let nominalBuyInitialOutlay = 0;
+                if (modeOfFinance === 'equity') {
+                    nominalBuyInitialOutlay = initialPurchasePrice;
+                }
+
+                // Cost of Equity (if modeOfFinance is 'equity')
+                let annualNominalCostOfEquity = Array(actualDurationYears).fill(0);
+                if (modeOfFinance === 'equity') {
+                    const equityCostRate = interestRateInput; // Use interestRateInput as the equity cost
+                    const costPerYearEquity = initialPurchasePrice * equityCostRate;
+                    for (let year = 0; year < actualDurationYears; year++) {
+                        annualNominalCostOfEquity[year] = costPerYearEquity;
+                    }
+                }
+
+                // Loan Payments (if modeOfFinance is 'loan')
+                let annualLoanPrincipalPayments = Array(actualDurationYears).fill(0);
+                let annualLoanInterestPayments = Array(actualDurationYears).fill(0);
+
+                if (modeOfFinance === 'loan' && initialPurchasePrice > 0) {
+                    const durationMonths = actualDurationYears * 12;
+                    const loanMonthlyRate = interestRateInput / 12; // Use interestRateInput as loan interest
+                    let remainingBalance = initialPurchasePrice;
+
+                    if (loanMonthlyRate === 0) { // Handle 0 interest rate for monthly payment calculation
+                        const monthlyPrincipal = initialPurchasePrice / durationMonths;
+                        for (let year = 0; year < actualDurationYears; year++) {
+                            annualLoanPrincipalPayments[year] = monthlyPrincipal * 12;
+                        }
+                    } else {
+                        const monthlyPayment = initialPurchasePrice * loanMonthlyRate / (1 - Math.pow(1 + loanMonthlyRate, -durationMonths));
+                        for (let month = 0; month < durationMonths; month++) {
+                            const interestThisMonth = remainingBalance * loanMonthlyRate;
+                            const principalThisMonth = monthlyPayment - interestThisMonth;
+                            
+                            const yearIndex = Math.floor(month / 12);
+                            if (yearIndex < actualDurationYears) {
+                                annualLoanPrincipalPayments[yearIndex] += principalThisMonth;
+                                annualLoanInterestPayments[yearIndex] += interestThisMonth;
+                            }
+                            remainingBalance -= principalThisMonth;
+                        }
+                    }
+                }
+                
+                // Management Cost (Nominal Annual)
+                let annualNominalManagementCost = Array(actualDurationYears).fill(0);
+                if (laptopsPerIT > 0) { // Only calculate if an IT person can manage at least one laptop
+                    const monthlyManagementCostPerPerson = itCost;
+                    const totalITManagers = Math.ceil(numLaptops / laptopsPerIT);
+                    const costPerYear = totalITManagers * monthlyManagementCostPerPerson * 12;
+                    for(let year = 0; year < actualDurationYears; year++) {
+                        annualNominalManagementCost[year] = costPerYear;
+                    }
+                }
+                
+                // Productivity Loss (Buy) (Nominal Annual)
+                let annualNominalBuyProductivityLoss = Array(actualDurationYears).fill(0);
+                const costPerYearProdLossBuy = numLaptops * avgSalary * buyProductivityLossRate * 12;
+                for(let year = 0; year < actualDurationYears; year++) {
+                    annualNominalBuyProductivityLoss[year] = costPerYearProdLossBuy;
+                }
+
+                // Depreciation Amount (Nominal Annual)
+                const actualDepreciationYears = Math.min(actualDurationYears, depreciationYearsInput);
+                let annualNominalDepreciationAmount = Array(actualDurationYears).fill(0);
+                if (actualDepreciationYears > 0 && initialPurchasePrice > 0) {
+                    const depreciationPerYear = initialPurchasePrice / depreciationYearsInput; // Straight-line depreciation
+                    for(let year = 0; year < actualDepreciationYears; year++) {
+                        annualNominalDepreciationAmount[year] = depreciationPerYear;
+                    }
+                }
+
+                // Tax Benefit on Depreciation (Nominal Annual)
+                let annualNominalDepreciationBenefit = Array(actualDurationYears).fill(0);
+                for(let year = 0; year < actualDepreciationYears; year++) {
+                    annualNominalDepreciationBenefit[year] = annualNominalDepreciationAmount[year] * corporateTaxRate;
+                }
+
+                // Residual Value (Nominal - only in the last year)
+                let nominalResidualValue = 0;
+                if (residualValueOption === 'sell' && actualDurationYears > 0) {
+                    nominalResidualValue = initialPurchasePrice * residualValueRate;
+                }
+                // If 'donate', nominalResidualValue remains 0, as initialized.
+
+                // --- LEASE OPTION CALCULATIONS (NOMINAL ANNUAL CASH FLOWS) ---
+
+                // Renting Cost (Nominal Annual)
+                let annualNominalRentingCost = Array(actualDurationYears).fill(0);
+                const costPerYearRenting = initialPurchasePrice * leaseRate;
+                for(let year = 0; year < actualDurationYears; year++) {
+                    annualNominalRentingCost[year] = costPerYearRenting;
+                }
+
+                // Management & Maintenance Cost (Lease) is ₹0 (Nominal Annual)
+                const annualNominalLeaseMgmtMaint = Array(actualDurationYears).fill(0); // Always 0
+
+                // Productivity Loss (Lease) (Nominal Annual) - Modified: 0 if buy productivity loss is 0
+                let annualNominalLeaseProductivityLoss = Array(actualDurationYears).fill(0);
+                if (buyProductivityLossRate > 0) { // Only calculate if buy productivity loss is not 0
+                    const costPerYearProdLossLease = numLaptops * avgSalary * leaseProductivityLossRate * 12;
+                    for(let year = 0; year < actualDurationYears; year++) {
+                        annualNominalLeaseProductivityLoss[year] = costPerYearProdLossLease;
+                    }
+                }
+
+                // Tax Savings (100% Deduction) (Nominal Annual)
+                let annualNominalLeaseTaxBenefit = Array(actualDurationYears).fill(0);
+                const benefitPerYearLeaseTax = (initialPurchasePrice * leaseRate) * corporateTaxRate;
+                for(let year = 0; year < actualDurationYears; year++) {
+                    annualNominalLeaseTaxBenefit[year] = benefitPerYearLeaseTax;
+                }
+
+
+                // --- GENERATE ANNUAL CASH FLOW TABLES ---
+                
+                // Helper function to create table row, returning both HTML and the NPV of its nominal cash flow stream
+                const createCashFlowRow = (label, nominalAnnualValues, discountRate, isSubtotal = false, isOverallTotal = false, infoKey = null) => {
+                    let rowHtml = `<tr class="${isOverallTotal ? 'total-row' : (isSubtotal ? 'subtotal-row' : '')}"><td>${label}${infoKey ? `<span class="info-icon" data-info="${infoKey}">ⓘ</span>` : ''}</td>`;
+                    let rowNPV = 0; // NPV for this specific row's stream
+
+                    for (let year = 0; year <= actualDurationYears; year++) {
+                        const nominal = nominalAnnualValues[year] !== undefined ? nominalAnnualValues[year] : 0;
+                        rowHtml += `<td>${formatCurrency(nominal)}</td>`;
+                        // Only add to NPV if it's within the duration period
+                        rowNPV += calculatePVSingleAmount(discountRate, year, nominal);
+                    }
+                    rowHtml += `<td>${formatCurrency(rowNPV)}</td>`; // NPV of this particular cash flow stream
+                    rowHtml += '</tr>';
+                    return { html: rowHtml, npv: rowNPV };
+                };
+
+                // Generate table headers (Year 0, Year 1, ..., Year N, NPV of Annual Cash Flow)
+                let headerHtml = '<tr><th>Cost Head</th>';
+                for (let year = 0; year <= actualDurationYears; year++) {
+                    headerHtml += `<th>Year ${year}</th>`;
+                }
+                headerHtml += `<th>NPV of Annual Cash Flow</th></tr>`;
+
+                // --- Buy Option Table ---
+                if (outputs.buyCashflowThead) outputs.buyCashflowThead.innerHTML = headerHtml;
+                let buyTbodyHtml = '';
+                let accumulatedBuyNPV = 0; 
+
+                // --- BUY: OUTFLOWS ---
+                buyTbodyHtml += `<tr><td colspan="${actualDurationYears + 2}" class="text-left font-bold py-2 px-4 bg-gray-200">OUTFLOWS</td></tr>`;
+
+                // Initial Outlay (Year 0)
+                const initialOutlayRow = createCashFlowRow('Initial Outlay', [nominalBuyInitialOutlay, ...Array(actualDurationYears).fill(0)], annualDiscountRate, false, false, 'buy-initial-outlay');
+                buyTbodyHtml += initialOutlayRow.html;
+                accumulatedBuyNPV += initialOutlayRow.npv;
+
+                if (modeOfFinance === 'loan') {
+                    // Loan Principal Payments
+                    const principalRow = createCashFlowRow('Principal Payments', [0, ...annualLoanPrincipalPayments], annualDiscountRate, false, false, 'buy-annual-principal');
+                    buyTbodyHtml += principalRow.html;
+                    accumulatedBuyNPV += principalRow.npv;
+
+                    // Loan Interest Payments
+                    const interestRow = createCashFlowRow('Interest Payments', [0, ...annualLoanInterestPayments], annualDiscountRate, false, false, 'buy-annual-interest');
+                    buyTbodyHtml += interestRow.html;
+                    accumulatedBuyNPV += interestRow.npv;
+                }
+
+                // Cost of Equity
+                if (modeOfFinance === 'equity') {
+                    const equityCostRow = createCashFlowRow('Cost of Equity (Opportunity)', [0, ...annualNominalCostOfEquity], annualDiscountRate, false, false, 'buy-cost-of-equity');
+                    buyTbodyHtml += equityCostRow.html;
+                    accumulatedBuyNPV += equityCostRow.npv;
+                }
+
+                // Management Cost
+                const mgmtCostRow = createCashFlowRow('Annual Management & Maintenance Cost', [0, ...annualNominalManagementCost], annualDiscountRate, false, false, 'buy-management');
+                buyTbodyHtml += mgmtCostRow.html;
+                accumulatedBuyNPV += mgmtCostRow.npv;
+
+                // Productivity Loss
+                const prodLossBuyRow = createCashFlowRow('Annual Productivity Loss', [0, ...annualNominalBuyProductivityLoss], annualDiscountRate, false, false, 'productivity-loss-comparison'); // Using generic for now
+                buyTbodyHtml += prodLossBuyRow.html;
+                accumulatedBuyNPV += prodLossBuyRow.npv;
+
+
+                // --- BUY: INFLOWS / TAX BENEFITS ---
+                buyTbodyHtml += `<tr><td colspan="${actualDurationYears + 2}" class="text-left font-bold py-2 px-4 bg-gray-200 mt-4">INFLOWS / TAX BENEFITS</td></tr>`;
+
+                if (modeOfFinance === 'loan') {
+                    // Tax Benefit on Interest (Negative outflow = inflow/benefit)
+                    const taxBenefitInterestRow = createCashFlowRow('Tax Benefit on Interest', [0, ...annualLoanInterestPayments.map(val => -val * corporateTaxRate)], annualDiscountRate, false, false, 'buy-tax-interest');
+                    buyTbodyHtml += taxBenefitInterestRow.html;
+                    accumulatedBuyNPV += taxBenefitInterestRow.npv;
+                }
+
+                // Tax Benefit on Depreciation (Negative outflow = inflow/benefit)
+                const depreciationBenefitRow = createCashFlowRow('Tax Benefit on Depreciation', [0, ...annualNominalDepreciationBenefit.map(val => -val)], annualDiscountRate, false, false, 'buy-depreciation');
+                buyTbodyHtml += depreciationBenefitRow.html;
+                accumulatedBuyNPV += depreciationBenefitRow.npv;
+
+                // Residual Value (Negative outflow = inflow/benefit)
+                const residualValueRow = createCashFlowRow('Residual Value', [...Array(actualDurationYears).fill(0), -nominalResidualValue], annualDiscountRate, false, false, 'buy-residual');
+                buyTbodyHtml += residualValueRow.html;
+                accumulatedBuyNPV += residualValueRow.npv;
+
+
+                // --- BUY: TOTALS ---
+                // Total nominal for each year by summing up all line items
+                let buyTotalNominalCashFlows = Array(actualDurationYears + 1).fill(0);
+                
+                // Year 0
+                buyTotalNominalCashFlows[0] += nominalBuyInitialOutlay;
+
+                // Years 1 to actualDurationYears
+                for (let year = 1; year <= actualDurationYears; year++) {
+                    let yearTotal = 0;
+                    if (modeOfFinance === 'loan') {
+                        yearTotal += (annualLoanPrincipalPayments[year-1] || 0);
+                        yearTotal += (annualLoanInterestPayments[year-1] || 0);
+                        yearTotal += (annualLoanInterestPayments[year-1] || 0) * (-corporateTaxRate); // Tax benefit on interest
+                    }
+                    if (modeOfFinance === 'equity') {
+                        yearTotal += (annualNominalCostOfEquity[year-1] || 0);
+                    }
+                    yearTotal += (annualNominalManagementCost[year-1] || 0);
+                    yearTotal += (annualNominalBuyProductivityLoss[year-1] || 0);
+                    yearTotal += (annualNominalDepreciationBenefit[year-1] || 0) * (-1); // Tax benefit on depreciation (negative outflow is inflow)
+                    if (year === actualDurationYears) {
+                        yearTotal += (-nominalResidualValue); // Residual value as inflow (negative outflow is inflow)
+                    }
+                    buyTotalNominalCashFlows[year] = yearTotal;
+                }
+
+                const totalBuyCashOutflowRow = createCashFlowRow('<b>Total Cash Flow (Nominal)</b>', buyTotalNominalCashFlows, annualDiscountRate, true);
+                buyTbodyHtml += totalBuyCashOutflowRow.html;
+                
+                const overallBuyNPVFinalRow = `<tr class="total-row"><td><b>Net Present Value (NPV)</b></td><td colspan="${actualDurationYears + 1}">${formatCurrency(accumulatedBuyNPV)}</td><td>${formatCurrency(accumulatedBuyNPV)}</td></tr>`;
+                buyTbodyHtml += overallBuyNPVFinalRow;
+
+                if (outputs.buyCashflowTbody) outputs.buyCashflowTbody.innerHTML = buyTbodyHtml;
+
+
+                // --- Lease Option Table ---
+                if (outputs.leaseCashflowThead) outputs.leaseCashflowThead.innerHTML = headerHtml;
+                let leaseTbodyHtml = '';
+                let accumulatedLeaseNPV = 0;
+
+                // --- LEASE: OUTFLOWS ---
+                leaseTbodyHtml += `<tr><td colspan="${actualDurationYears + 2}" class="text-left font-bold py-2 px-4 bg-gray-200">OUTFLOWS</td></tr>`;
+
+                // Renting Cost
+                const rentingCostRow = createCashFlowRow('Annual Lease Rent', [0, ...annualNominalRentingCost], annualDiscountRate, false, false, 'lease-cost');
+                leaseTbodyHtml += rentingCostRow.html;
+                accumulatedLeaseNPV += rentingCostRow.npv;
+
+                // Productivity Loss (Lease)
+                const prodLossLeaseRow = createCashFlowRow('Annual Productivity Loss', [0, ...annualNominalLeaseProductivityLoss], annualDiscountRate, false, false, 'productivity-loss-comparison'); // Using generic for now
+                leaseTbodyHtml += prodLossLeaseRow.html;
+                accumulatedLeaseNPV += prodLossLeaseRow.npv;
+
+
+                // --- LEASE: INFLOWS / TAX BENEFITS ---
+                leaseTbodyHtml += `<tr><td colspan="${actualDurationYears + 2}" class="text-left font-bold py-2 px-4 bg-gray-200 mt-4">INFLOWS / TAX BENEFITS</td></tr>`;
+
+                // Tax Benefit on Lease Rent
+                const taxBenefitLeaseRow = createCashFlowRow('Tax Benefit on Lease Rent', [0, ...annualNominalLeaseTaxBenefit.map(val => -val)], annualDiscountRate, false, false, 'lease-tax-benefit');
+                leaseTbodyHtml += taxBenefitLeaseRow.html;
+                accumulatedLeaseNPV += taxBenefitLeaseRow.npv;
+
+                // --- LEASE: TOTALS ---
+                let leaseTotalNominalCashFlows = Array(actualDurationYears + 1).fill(0);
+                // Year 0 (Lease typically has no Year 0 outflow for rent/mgmt/maint/prod loss)
+                leaseTotalNominalCashFlows[0] = 0; // Explicitly set if no initial payment for lease is assumed
+
+                // Years 1 to actualDurationYears
+                for (let year = 1; year <= actualDurationYears; year++) {
+                    let yearTotal = 0;
+                    yearTotal += (annualNominalRentingCost[year-1] || 0);
+                    yearTotal += (annualNominalLeaseProductivityLoss[year-1] || 0);
+                    yearTotal += (annualNominalLeaseTaxBenefit[year-1] || 0) * (-1); // Tax benefit as inflow
+                    leaseTotalNominalCashFlows[year] = yearTotal;
+                }
+
+                const totalLeaseCashOutflowRow = createCashFlowRow('<b>Total Cash Flow (Nominal)</b>', leaseTotalNominalCashFlows, annualDiscountRate, true);
+                leaseTbodyHtml += totalLeaseCashOutflowRow.html;
+
+                const overallLeaseNPVFinalRow = `<tr class="total-row"><td><b>Net Present Value (NPV)</b></td><td colspan="${actualDurationYears + 1}">${formatCurrency(accumulatedLeaseNPV)}</td><td>${formatCurrency(accumulatedLeaseNPV)}</td></tr>`;
+                leaseTbodyHtml += overallLeaseNPVFinalRow;
+                
+                if (outputs.leaseCashflowTbody) outputs.leaseCashflowTbody.innerHTML = leaseTbodyHtml;
+
+
+                // Make sure globalCalculatedValues reflect the accumulated NPVs.
+                globalCalculatedValues.buyNetCostPV = accumulatedBuyNPV;
+                globalCalculatedValues.leaseNetCostPV = accumulatedLeaseNPV;
+
+                // --- CALCULATE TOTAL NOMINAL OUTFLOWS (FROM SUM OF ANNUAL CASH FLOWS) ---
+                // Sum all nominal cash flows including Year 0
+                let calculatedTotalNominalBuyOutflow = buyTotalNominalCashFlows.reduce((sum, val) => sum + val, 0);
+                let calculatedTotalNominalLeaseOutflow = leaseTotalNominalCashFlows.reduce((sum, val) => sum + val, 0);
+                let calculatedNominalSavings = calculatedTotalNominalBuyOutflow - calculatedTotalNominalLeaseOutflow;
+
+                // Update globalCalculatedValues with these consistent nominal totals
+                globalCalculatedValues.totalNominalBuyOutflow = calculatedTotalNominalBuyOutflow;
+                globalCalculatedValues.totalNominalLeaseOutflow = calculatedTotalNominalLeaseOutflow;
+                globalCalculatedValues.nominalSavings = calculatedNominalSavings;
+
+                // --- FINAL COMPARISON (PRESENT VALUES) ---
+                const totalSavingsPV = globalCalculatedValues.buyNetCostPV - globalCalculatedValues.leaseNetCostPV;
+                const totalSavingsPercentage = (globalCalculatedValues.buyNetCostPV === 0) ? 0 : (totalSavingsPV / globalCalculatedValues.buyNetCostPV) * 100;
+                
+                globalCalculatedValues.totalSavingsPV = totalSavingsPV;
+                globalCalculatedValues.totalSavingsPercentage = totalSavingsPercentage;
+
+
+                // --- CONSOLE LOGGING FOR DEBUGGING ---
+                console.log("--- Final Comparison Calculated Values ---");
+                console.log("   Nominal Buy Total Outflow:", globalCalculatedValues.totalNominalBuyOutflow);
+                console.log("   Nominal Lease Total Outflow:", globalCalculatedValues.totalNominalLeaseOutflow);
+                console.log("   Nominal Savings:", globalCalculatedValues.nominalSavings);
+                console.log("   Net Cost to Buy (PV):", globalCalculatedValues.buyNetCostPV);
+                console.log("   Net Cost to Lease (PV):", globalCalculatedValues.leaseNetCostPV);
+                console.log("   Total Savings When Renting (PV):", globalCalculatedValues.totalSavingsPV);
+                console.log("   Total Savings Percentage:", totalSavingsPercentage);
+                console.log("---------------------------------------");
+
+
+                // --- DISPLAY RESULTS IN MAIN SECTIONS (NOMINAL ANNUAL & PV) ---
+
+                // Defensive checks and assignments for nominal outputs
+                if (outputs.nominalBuyTotal) outputs.nominalBuyTotal.textContent = formatCurrency(globalCalculatedValues.totalNominalBuyOutflow);
+                if (outputs.nominalLeaseTotal) outputs.nominalLeaseTotal.textContent = formatCurrency(globalCalculatedValues.totalNominalLeaseOutflow);
+                if (outputs.nominalTotalSavings) {
+                    outputs.nominalTotalSavings.textContent = formatCurrency(globalCalculatedValues.nominalSavings);
+                    if (globalCalculatedValues.nominalSavings >= 0) {
+                        outputs.nominalTotalSavings.classList.remove('text-red-600');
+                        outputs.nominalTotalSavings.classList.add('text-green-600');
+                    } else {
+                        outputs.nominalTotalSavings.classList.remove('text-green-600');
+                        outputs.nominalTotalSavings.classList.add('text-red-600');
+                    }
+                }
+
+                // Defensive checks and assignments for PV outputs
+                if (outputs.finalBuyNetCost) outputs.finalBuyNetCost.textContent = formatCurrency(globalCalculatedValues.buyNetCostPV);
+                if (outputs.finalLeaseNetCost) outputs.finalLeaseNetCost.textContent = formatCurrency(globalCalculatedValues.leaseNetCostPV);
+                if (outputs.totalSavings) {
+                    outputs.totalSavings.textContent = formatCurrency(globalCalculatedValues.totalSavingsPV);
+                    if (globalCalculatedValues.totalSavingsPV >= 0) {
+                        outputs.totalSavings.classList.remove('text-red-600');
+                        outputs.totalSavings.classList.add('text-green-600');
+                    } else {
+                        outputs.totalSavings.classList.remove('text-green-600');
+                        outputs.totalSavings.classList.add('text-red-600');
+                    }
+                }
+                if (outputs.totalSavingsPercentage) {
+                    outputs.totalSavingsPercentage.textContent = `You ${globalCalculatedValues.totalSavingsPV >= 0 ? 'save' : 'incur a loss of'} ${Math.abs(globalCalculatedValues.totalSavingsPercentage).toFixed(2)}% of the buy cost!`;
+                    if (globalCalculatedValues.totalSavingsPV >= 0) {
+                        outputs.totalSavingsPercentage.classList.remove('text-red-700');
+                        outputs.totalSavingsPercentage.classList.add('text-green-700');
+                    } else {
+                        outputs.totalSavingsPercentage.classList.remove('text-green-700');
+                        outputs.totalSavingsPercentage.classList.add('text-red-700');
+                    }
+                }
+
+                // --- GENERATE SIDE-BY-SIDE COMPARISON TABLE ---
+                const c = globalCalculatedValues; // Shorthand for calculated values
+
+                let sideBySideTheadHtml = `
+                    <tr>
+                        <th>Cost Head</th>
+                        <th>Buy Option (Nominal)</th>
+                        <th>Buy Option (PV)</th>
+                        <th>Lease Option (Nominal)</th>
+                        <th>Lease Option (PV)</th>
+                    </tr>
+                `;
+                if (outputs.sideBySideThead) outputs.sideBySideThead.innerHTML = sideBySideTheadHtml;
+
+                let sideBySideTbodyHtml = `
+                    <tr><td colspan="5" class="text-left font-bold py-2 px-4 bg-gray-200">OUTFLOWS</td></tr>
+                    <tr>
+                        <td>Initial Outlay <span class="info-icon" data-info="buy-initial-outlay">ⓘ</span></td>
+                        <td>${formatCurrency(nominalBuyInitialOutlay)}</td>
+                        <td>${formatCurrency(calculatePVSingleAmount(annualDiscountRate, 0, nominalBuyInitialOutlay))}</td>
+                        <td>${formatCurrency(0)}</td>
+                        <td>${formatCurrency(0)}</td>
+                    </tr>
+                `;
+
+                if (modeOfFinance === 'equity') {
+                    sideBySideTbodyHtml += `
+                        <tr>
+                            <td>Cost of Equity (Opportunity) <span class="info-icon" data-info="buy-cost-of-equity">ⓘ</span></td>
+                            <td>${formatCurrency(annualNominalCostOfEquity.reduce((sum, val) => sum + val, 0))}</td>
+                            <td>${formatCurrency(annualNominalCostOfEquity.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0))}</td>
+                            <td>${formatCurrency(0)}</td>
+                            <td>${formatCurrency(0)}</td>
+                        </tr>
+                    `;
+                }
+                
+                if (modeOfFinance === 'loan') {
+                    // Calculate PV of principal and interest payments separately for the side-by-side table
+                    let pvPrincipalPayments = 0;
+                    let pvInterestPayments = 0;
+                    let currentLoanBalance = initialPurchasePrice;
+                    const loanMonthlyRate = interestRateInput / 12;
+                    const durationMonths = actualDurationYears * 12;
+
+                    if (loanMonthlyRate === 0) {
+                        const monthlyPrincipal = initialPurchasePrice / durationMonths;
+                        for (let month = 0; month < durationMonths; month++) {
+                            pvPrincipalPayments += calculatePVSingleAmount(annualDiscountRate / 12, month + 1, monthlyPrincipal);
+                        }
+                    } else {
+                        const monthlyPayment = initialPurchasePrice * loanMonthlyRate / (1 - Math.pow(1 + loanMonthlyRate, -durationMonths));
+                        for (let month = 0; month < durationMonths; month++) {
+                            const interestThisMonth = currentLoanBalance * loanMonthlyRate;
+                            const principalThisMonth = monthlyPayment - interestThisMonth;
+                            pvPrincipalPayments += calculatePVSingleAmount(annualDiscountRate / 12, month + 1, principalThisMonth);
+                            pvInterestPayments += calculatePVSingleAmount(annualDiscountRate / 12, month + 1, interestThisMonth);
+                            currentLoanBalance -= principalThisMonth;
+                        }
+                    }
+
+                    sideBySideTbodyHtml += `
+                        <tr>
+                            <td>Principal Payments <span class="info-icon" data-info="buy-annual-principal">ⓘ</span></td>
+                            <td>${formatCurrency(annualLoanPrincipalPayments.reduce((sum, val) => sum + val, 0))}</td>
+                            <td>${formatCurrency(pvPrincipalPayments)}</td>
+                            <td>${formatCurrency(0)}</td>
+                            <td>${formatCurrency(0)}</td>
+                        </tr>
+                        <tr>
+                            <td>Interest Payments <span class="info-icon" data-info="buy-annual-interest">ⓘ</span></td>
+                            <td>${formatCurrency(annualLoanInterestPayments.reduce((sum, val) => sum + val, 0))}</td>
+                            <td>${formatCurrency(pvInterestPayments)}</td>
+                            <td>${formatCurrency(0)}</td>
+                            <td>${formatCurrency(0)}</td>
+                        </tr>
+                    `;
+                }
+
+                sideBySideTbodyHtml += `
+                    <tr>
+                        <td>Annual Management & Maintenance Cost <span class="info-icon" data-info="buy-management">ⓘ</span></td>
+                        <td>${formatCurrency(annualNominalManagementCost.reduce((sum, val) => sum + val, 0))}</td>
+                        <td>${formatCurrency(annualNominalManagementCost.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0))}</td>
+                        <td>${formatCurrency(0)}</td>
+                        <td>${formatCurrency(0)}</td>
+                    </tr>
+                    <tr>
+                        <td>Annual Productivity Loss <span class="info-icon" data-info="productivity-loss-comparison">ⓘ</span></td>
+                        <td>${formatCurrency(annualNominalBuyProductivityLoss.reduce((sum, val) => sum + val, 0))}</td>
+                        <td>${formatCurrency(annualNominalBuyProductivityLoss.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0))}</td>
+                        <td>${formatCurrency(annualNominalLeaseProductivityLoss.reduce((sum, val) => sum + val, 0))}</td>
+                        <td>${formatCurrency(annualNominalLeaseProductivityLoss.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0))}</td>
+                    </tr>
+                    <tr>
+                        <td>Annual Lease Rent <span class="info-icon" data-info="lease-cost">ⓘ</span></td>
+                        <td>${formatCurrency(0)}</td>
+                        <td>${formatCurrency(0)}</td>
+                        <td>${formatCurrency(annualNominalRentingCost.reduce((sum, val) => sum + val, 0))}</td>
+                        <td>${formatCurrency(annualNominalRentingCost.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0))}</td>
+                    </tr>
+                    <tr class="subtotal-row">
+                        <td><b>Total Outflows (Nominal)</b> <span class="info-icon" data-info="total-outflows-nominal">ⓘ</span></td>
+                        <td><b>${formatCurrency(calculatedTotalNominalBuyOutflow + nominalResidualValue)}</b></td>
+                        <td><b>${formatCurrency(accumulatedBuyNPV + calculatePVSingleAmount(annualDiscountRate, actualDurationYears, nominalResidualValue))}</b></td>
+                        <td><b>${formatCurrency(calculatedTotalNominalLeaseOutflow + annualNominalLeaseTaxBenefit.reduce((sum, val) => sum + val, 0))}</b></td>
+                        <td><b>${formatCurrency(accumulatedLeaseNPV + annualNominalLeaseTaxBenefit.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0))}</b></td>
+                    </tr>
+                    <tr><td colspan="5"></td></tr>
+                    <tr><td colspan="5" class="text-left font-bold py-2 px-4 bg-gray-200">INFLOWS / TAX BENEFITS</td></tr>
+                `;
+
+                if (modeOfFinance === 'loan') {
+                    sideBySideTbodyHtml += `
+                        <tr>
+                            <td>Tax Benefit on Interest <span class="info-icon" data-info="buy-tax-interest">ⓘ</span></td>
+                            <td>${formatCurrency(annualLoanInterestPayments.reduce((sum, val) => sum + val, 0) * corporateTaxRate)}</td>
+                            <td>${formatCurrency(annualLoanInterestPayments.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val * corporateTaxRate), 0))}</td>
+                            <td>${formatCurrency(0)}</td>
+                            <td>${formatCurrency(0)}</td>
+                        </tr>
+                    `;
+                }
+
+                sideBySideTbodyHtml += `
+                    <tr>
+                        <td>Tax Benefit on Depreciation <span class="info-icon" data-info="buy-depreciation">ⓘ</span></td>
+                        <td>${formatCurrency(annualNominalDepreciationBenefit.reduce((sum, val) => sum + val, 0))}</td>
+                        <td>${formatCurrency(annualNominalDepreciationBenefit.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0))}</td>
+                        <td>${formatCurrency(0)}</td>
+                        <td>${formatCurrency(0)}</td>
+                    </tr>
+                    <tr>
+                        <td>Residual Value <span class="info-icon" data-info="buy-residual">ⓘ</span></td>
+                        <td>${formatCurrency(nominalResidualValue)}</td>
+                        <td>${formatCurrency(calculatePVSingleAmount(annualDiscountRate, actualDurationYears, nominalResidualValue))}</td>
+                        <td>${formatCurrency(0)}</td>
+                        <td>${formatCurrency(0)}</td>
+                    </tr>
+                    <tr>
+                        <td>Tax Benefit on Lease Rent <span class="info-icon" data-info="lease-tax-benefit">ⓘ</span></td>
+                        <td>${formatCurrency(0)}</td>
+                        <td>${formatCurrency(0)}</td>
+                        <td>${formatCurrency(annualNominalLeaseTaxBenefit.reduce((sum, val) => sum + val, 0))}</td>
+                        <td>${formatCurrency(annualNominalLeaseTaxBenefit.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0))}</td>
+                    </tr>
+                    <tr class="subtotal-row">
+                        <td><b>Total Inflows (Nominal)</b> <span class="info-icon" data-info="total-inflows-nominal">ⓘ</span></td>
+                        <td><b>${formatCurrency(annualNominalDepreciationBenefit.reduce((sum, val) => sum + val, 0) + nominalResidualValue + (modeOfFinance === 'loan' ? annualLoanInterestPayments.reduce((sum, val) => sum + val, 0) * corporateTaxRate : 0))}</b></td>
+                        <td><b>${formatCurrency(annualNominalDepreciationBenefit.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0) + calculatePVSingleAmount(annualDiscountRate, actualDurationYears, nominalResidualValue) + (modeOfFinance === 'loan' ? annualLoanInterestPayments.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val * corporateTaxRate), 0) : 0))}</b></td>
+                        <td><b>${formatCurrency(annualNominalLeaseTaxBenefit.reduce((sum, val) => sum + val, 0))}</b></td>
+                        <td><b>${formatCurrency(annualNominalLeaseTaxBenefit.reduce((sum, val, idx) => sum + calculatePVSingleAmount(annualDiscountRate, idx + 1, val), 0))}</b></td>
+                    </tr>
+                    <tr><td colspan="5"></td></tr>
+                    <tr class="total-row">
+                        <td><b>NET COST (Nominal)</b> <span class="info-icon" data-info="net-cost-nominal">ⓘ</span></td>
+                        <td><b>${formatCurrency(calculatedTotalNominalBuyOutflow)}</b></td>
+                        <td></td>
+                        <td><b>${formatCurrency(calculatedTotalNominalLeaseOutflow)}</b></td>
+                        <td></td>
+                    </tr>
+                    <tr class="total-row">
+                        <td><b>NET COST (PV)</b> <span class="info-icon" data-info="net-cost-pv">ⓘ</span></td>
+                        <td><b>${formatCurrency(c.buyNetCostPV)}</b></td>
+                        <td></td>
+                        <td><b>${formatCurrency(c.leaseNetCostPV)}</b></td>
+                        <td></td>
+                    </tr>
+                `;
+
+                if (outputs.sideBySideTbody) outputs.sideBySideTbody.innerHTML = sideBySideTbodyHtml;
+
+            }
+
+            // Get the modal elements
+            const infoModal = document.getElementById('infoModal');
+            const closeModal = document.querySelector('.close-button');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+
+            // Function to open the modal
+            function openModal(title, body) {
+                if (modalTitle) modalTitle.innerHTML = title;
+                if (modalBody) modalBody.innerHTML = body;
+                if (infoModal) infoModal.style.display = 'block';
+            }
+
+            // Event listener for info icons
+            document.querySelectorAll('.info-icon').forEach(icon => {
+                icon.addEventListener('click', (event) => {
+                    const infoKey = event.target.dataset.info;
+                    const content = infoContent[infoKey];
+                    if (content) {
+                        openModal(content.title, content.body);
+                    }
+                });
+            });
+
+            // Event listener for close button
+            if (closeModal) {
+                closeModal.addEventListener('click', () => {
+                    if (infoModal) infoModal.style.display = 'none';
+                });
+            }
+
+
+            // Close modal when clicking outside of it
+            window.addEventListener('click', (event) => {
+                if (event.target == infoModal) {
+                    infoModal.style.display = 'none';
+                }
+            });
+
+            // Attach event listeners to all input fields to trigger calculation on change
+            for (const key in inputs) {
+                const element = inputs[key];
+                if (element) { // Check if the element exists before adding listener
+                    element.addEventListener('change', calculate);
+                    element.addEventListener('input', calculate); // For real-time updates on text inputs
+                }
+            }
+
+            // Attach event listener to the calculate button
+            const calculateButton = document.getElementById('calculateButton');
+            if (calculateButton) {
+                calculateButton.addEventListener('click', calculate);
+            }
+
+            // Attach event listener to the reset button
+            const resetButton = document.getElementById('resetButton');
+            if (resetButton) {
+                resetButton.addEventListener('click', () => {
+                    for (const key in inputs) {
+                        const element = inputs[key];
+                        if (element) {
+                            element.value = initialInputValues[key];
+                        }
+                    }
+                    calculate(); // Recalculate with reset values
+                });
+            }
+
+
+            // Initial calculation on page load
+            calculate();
+        });
+    </script>
+</body>
+</html>
